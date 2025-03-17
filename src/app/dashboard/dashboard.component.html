@@ -1,5 +1,4 @@
 <div class="min-h-screen bg-gray-50">
-  <!-- Mantén tu header existente -->
   <app-header></app-header>
 
   <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 max-w-full bg-gray-100">
@@ -50,6 +49,14 @@
           </select>
         </div>
         
+        <!-- Filtro de Estadística -->
+        <div class="space-y-2">
+          <label class="block text-gray-700">Estadística:</label>
+          <select [(ngModel)]="filtros.estadistica" class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option *ngFor="let est of estadisticasDisponibles" [value]="est">{{ est }}</option>
+          </select>
+        </div>
+        
         <!-- Botón de búsqueda -->
         <div class="flex items-end">
           <button (click)="aplicarFiltros()" class="w-full bg-gray-800 hover:bg-white hover:text-gray-800 border hover:border-gray-800 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center">
@@ -60,6 +67,16 @@
             {{ cargando ? 'Cargando...' : 'Buscar' }}
           </button>
         </div>
+        <!-- Botón para mostrar gráfica -->
+        <div *ngIf="!cargando && estadisticas.length > 0" class="mb-4" class="flex items-end">
+          <button 
+            *ngIf="filtros.transporte !== 'Todos' && filtros.estadistica !== 'Todas'" 
+            (click)="mostrarGraficaClick()" 
+            class="w-full bg-gray-800 hover:bg-white hover:text-gray-800 border hover:border-gray-800 text-white font-medium py-2 px-4 rounded-md transition duration-200 flex items-center justify-center"
+          >
+            Mostrar Gráfica
+          </button>
+        </div>
       </div>
     </div>
 
@@ -68,12 +85,21 @@
       <p class="text-gray-500">No hay datos disponibles. Por favor, ajusta los filtros y realiza una búsqueda.</p>
     </div>
 
+    <!-- Gráfica con ng2-charts -->
+    <div *ngIf="mostrarGrafica" class="bg-white rounded-lg shadow-md p-6 mb-6">
+      <canvas baseChart 
+        [data]="lineChartData" 
+        [type]="lineChartType" 
+        [options]="lineChartOptions">
+      </canvas>
+    </div>
+
     <!-- Resultados - Dashboard de estadísticas -->
     <div *ngIf="estadisticas.length > 0" class="space-y-6">
       <!-- Tarjetas de resumen -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Total pasajeros transportados -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Pasajeros transportados'" class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between">
             <h3 class="text-gray-500 text-sm font-medium">Total Pasajeros</h3>
             <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
@@ -89,7 +115,7 @@
         </div>
 
         <!-- Kilómetros recorridos -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Kilómetros recorridos'" class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between">
             <h3 class="text-gray-500 text-sm font-medium">Kilómetros Recorridos</h3>
             <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
@@ -105,7 +131,7 @@
         </div>
 
         <!-- Ingresos -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Ingresos por pasaje'" class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between">
             <h3 class="text-gray-500 text-sm font-medium">Ingresos Totales</h3>
             <span class="bg-purple-100 text-purple-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
@@ -121,7 +147,7 @@
         </div>
 
         <!-- Unidades en operación (promedio) -->
-        <div class="bg-white rounded-lg shadow-md p-6">
+        <div *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Unidades en operación'" class="bg-white rounded-lg shadow-md p-6">
           <div class="flex items-center justify-between">
             <h3 class="text-gray-500 text-sm font-medium">Unidades en Operación</h3>
             <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
@@ -149,11 +175,11 @@
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Año</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mes</th>
                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Transporte</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pasajeros</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">KM Recorridos</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades</th>
-                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Long. Servicio</th>
+                <th *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Pasajeros transportados'" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Pasajeros</th>
+                <th *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Kilómetros recorridos'" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">KM Recorridos</th>
+                <th *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Ingresos por pasaje'" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Ingresos</th>
+                <th *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Unidades en operación'" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Unidades</th>
+                <th *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Longitud de servicio'" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Long. Servicio</th>
               </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -161,23 +187,20 @@
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ est.anio }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ getNombreMes(est.mes) }}</td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ est.transporte }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.pasajerosTransportados | number:'1.0-0' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.kilometrosRecorridos | number:'1.0-0' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${{ est.ingresosPorPasaje | number:'1.2-2' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.unidadesOperacion | number:'1.0-0' }}</td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.longitudServicio | number:'1.0-0' }} km</td>
+                <td *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Pasajeros transportados'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.pasajerosTransportados | number:'1.0-0' }}</td>
+                <td *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Kilómetros recorridos'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.kilometrosRecorridos | number:'1.0-0' }}</td>
+                <td *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Ingresos por pasaje'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">${{ est.ingresosPorPasaje | number:'1.2-2' }}</td>
+                <td *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Unidades en operación'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.unidadesOperacion | number:'1.0-0' }}</td>
+                <td *ngIf="filtros.estadistica === 'Todas' || filtros.estadistica === 'Longitud de servicio'" class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-right">{{ est.longitudServicio | number:'1.0-0' }} km</td>
               </tr>
             </tbody>
           </table>
         </div>
         
-        <!-- Paginación (opcional) -->
         <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
           <div class="text-sm text-gray-500">
             Mostrando <span class="font-medium">{{ estadisticas.length }}</span> registros
           </div>
-          
-          <!-- Aquí se podría añadir paginación si se implementa esa funcionalidad -->
         </div>
       </div>
     </div>

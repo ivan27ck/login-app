@@ -14,7 +14,7 @@ export class HeaderComponent {
   constructor(private router: Router) { }
 
   LogOut() {
-    this.router.navigate(['/auth/log-in']); // Redirige al log-in
+    this.router.navigate(['/auth/log-in']); 
   }
 
 
